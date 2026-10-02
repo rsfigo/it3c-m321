@@ -1,6 +1,5 @@
-# Ausbaustufe 1: nur der Broker und der chat-service.
-# Postgres, Keycloak, web-gateway und batch-writer kommen in den
-# folgenden Schritten dazu.
+# Ausbaustufe 2: Broker, chat-service und die Datenbank für den batch-writer.
+# Keycloak, web-gateway und load-generator kommen in späteren Schritten dazu.
 services:
 
   rabbitmq:
@@ -33,8 +32,32 @@ services:
     networks:
       - chat-net
 
+  # Speichert den Chat-Verlauf. Einziger Schreiber ist der batch-writer.
+  postgres:
+    image: postgres:16
+    environment:
+      # Mit diesen drei Werten legt das Image beim ersten Start Datenbank und
+      # Benutzer an. Der batch-writer liest dieselben Variablen.
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # Benannter Datenträger: der Verlauf überlebt einen Neustart des
+      # Containers. Gelöscht wird er erst mit "docker compose down -v".
+      - chat-db-data:/var/lib/postgresql/data
+    networks:
+      - chat-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
 # KEIN ports:-Eintrag in dieser Datei. Der einzige offene Port des
 # Gesamtsystems gehört später dem web-gateway.
+volumes:
+  chat-db-data:
+
 networks:
   chat-net:
     name: chat-net
