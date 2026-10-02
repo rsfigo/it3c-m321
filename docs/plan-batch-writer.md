@@ -82,10 +82,10 @@ der Ordner `batch-writer` in seinem Build-Kontext fehlt (Spezifikation 4.6).
 
 **Dateien:** Ändern: `chat-service/Dockerfile`
 
-- [ ] `RUN mvn -q -pl chat-service -am package -DskipTests` ersetzen durch
+- [x] `RUN mvn -q -pl chat-service -am package -DskipTests` ersetzen durch
       `RUN mvn -q -f chat-service/pom.xml package -DskipTests`, Kommentar warum.
-- [ ] **Test:** `docker compose build chat-service` endet ohne Fehler.
-- [ ] **Commit:** `fix: chat-service-Image baut nur sein eigenes Modul`
+- [x] **Test:** `docker compose build chat-service` endet ohne Fehler.
+- [x] **Commit:** `fix: chat-service-Image baut nur sein eigenes Modul`
 
 ## Task 2: RabbitMQ erst gesund, wenn der AMQP-Port bereit ist
 
@@ -95,11 +95,11 @@ nie in die Queue (Spezifikation 4.6).
 
 **Dateien:** Ändern: `docker-compose.yml`
 
-- [ ] Healthcheck von `rabbitmq` auf
+- [x] Healthcheck von `rabbitmq` auf
       `["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]`, Kommentar warum.
-- [ ] **Test:** `docker compose down && docker compose up -d`, danach sofort eine Nachricht
+- [x] **Test:** `docker compose down && docker compose up -d`, danach sofort eine Nachricht
       senden (Hilfsbefehl aus Spezifikation 5 mit `N=1`): Antwort `202`.
-- [ ] **Commit:** `fix: rabbitmq erst gesund, wenn der AMQP-Port Verbindungen annimmt`
+- [x] **Commit:** `fix: rabbitmq erst gesund, wenn der AMQP-Port Verbindungen annimmt`
 
 ## Task 3: PostgreSQL im Stack
 
@@ -108,13 +108,13 @@ starten. Der Dienst selbst braucht noch keinen Code dafür.
 
 **Dateien:** Ändern: `docker-compose.yml`, `.env.example` · lokal: `.env`
 
-- [ ] Dienst `postgres` (`postgres:16`) mit `POSTGRES_DB`, `POSTGRES_USER`,
+- [x] Dienst `postgres` (`postgres:16`) mit `POSTGRES_DB`, `POSTGRES_USER`,
       `POSTGRES_PASSWORD` aus `.env`, Volume `chat-db-data`, Healthcheck
       `pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}`, Netz `chat-net`, **kein** `ports:`.
-- [ ] `.env.example` um die drei Variablen mit Beispielwerten ergänzen.
-- [ ] **Test:** `docker compose up -d postgres` → `docker compose ps` zeigt `healthy` und kein
+- [x] `.env.example` um die drei Variablen mit Beispielwerten ergänzen.
+- [x] **Test:** `docker compose up -d postgres` → `docker compose ps` zeigt `healthy` und kein
       `->`; `docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1"'` ergibt `1`.
-- [ ] **Commit:** `chore: PostgreSQL in docker-compose aufnehmen`
+- [x] **Commit:** `chore: PostgreSQL in docker-compose aufnehmen`
 
 ## Task 4: Maven-Modul batch-writer mit Anwendungsstart
 
@@ -125,16 +125,16 @@ die Anwendung gegen eine echte Queue und eine echte Datenbank startet.
 `BatchWriterApplication.java`, `application.yml`, Test `IntegrationTestBase.java`,
 `BatchWriterApplicationTest.java`
 
-- [ ] Modul `batch-writer` im Eltern-POM.
-- [ ] Abhängigkeiten: `spring-boot-starter-amqp`, `spring-boot-starter-jdbc`,
+- [x] Modul `batch-writer` im Eltern-POM.
+- [x] Abhängigkeiten: `spring-boot-starter-amqp`, `spring-boot-starter-jdbc`,
       `spring-boot-starter-json`, `org.postgresql:postgresql` (runtime), Lombok;
       Test: `spring-boot-starter-test`, Testcontainers `junit-jupiter`, `rabbitmq`, `postgresql`.
-- [ ] `application.yml`: RabbitMQ und Datasource aus den Variablen der Spezifikation 4.4.
-- [ ] `IntegrationTestBase`: startet RabbitMQ und Postgres **einmal** (statischer Block) und
+- [x] `application.yml`: RabbitMQ und Datasource aus den Variablen der Spezifikation 4.4.
+- [x] `IntegrationTestBase`: startet RabbitMQ und Postgres **einmal** (statischer Block) und
       trägt Host, Port und Zugangsdaten per `@DynamicPropertySource` ein.
-- [ ] **Test** `BatchWriterApplicationTest.contextLoads`: Kontext startet.
-- [ ] **Prüfen:** `mvn -pl batch-writer test` grün.
-- [ ] **Commit:** `feat: Maven-Modul batch-writer mit Anwendungsstart`
+- [x] **Test** `BatchWriterApplicationTest.contextLoads`: Kontext startet.
+- [x] **Prüfen:** `mvn -pl batch-writer test` grün.
+- [x] **Commit:** `feat: Maven-Modul batch-writer mit Anwendungsstart`
 
 ## Task 5: Tabelle message mit Primärschlüssel und Index
 
@@ -143,15 +143,15 @@ lässt sich für sich allein prüfen (Spezifikation 4.1 bis 4.3).
 
 **Dateien:** Anlegen: `schema.sql`, Test `SchemaIntegrationTest.java` · Ändern: `application.yml`
 
-- [ ] `schema.sql` wie in Spezifikation 4.1, alles mit `IF NOT EXISTS`.
-- [ ] `spring.sql.init.mode: always`, `spring.sql.init.continue-on-error: true`.
-- [ ] **Tests** `SchemaIntegrationTest`:
+- [x] `schema.sql` wie in Spezifikation 4.1, alles mit `IF NOT EXISTS`.
+- [x] `spring.sql.init.mode: always`, `spring.sql.init.continue-on-error: true`.
+- [x] **Tests** `SchemaIntegrationTest`:
   - `createsMessageTableWithPlannedColumns` — die sechs Spalten mit Typ aus
     `information_schema.columns`
   - `usesIdAsPrimaryKey` — Primärschlüssel ist `id`
   - `createsIndexForRoomAndTime` — Index `message_room_id_sent_at_idx` existiert
   - `canRunSchemaTwice` — Skript ein zweites Mal ausführen wirft nichts
-- [ ] **Commit:** `feat: Tabelle message mit Primärschlüssel und Index`
+- [x] **Commit:** `feat: Tabelle message mit Primärschlüssel und Index`
 
 ## Task 6: Nachricht aus dem rohen JSON lesen und prüfen
 
@@ -161,17 +161,17 @@ Container testen und muss stehen, bevor irgendetwas geschrieben wird.
 **Dateien:** Anlegen: `dto/ChatMessage.java`, `service/MessageReader.java`,
 `service/InvalidMessageException.java`, Test `MessageReaderTest.java`
 
-- [ ] `ChatMessage` als `record` mit den sechs Feldern.
-- [ ] `MessageReader.read(Message)`: Körper als UTF-8 lesen, mit dem ObjectMapper von
+- [x] `ChatMessage` als `record` mit den sechs Feldern.
+- [x] `MessageReader.read(Message)`: Körper als UTF-8 lesen, mit dem ObjectMapper von
       Spring Boot in `ChatMessage` wandeln, Header ignorieren; jedes fehlende Pflichtfeld
       und jedes ungültige JSON wird zu `InvalidMessageException` mit Grund.
-- [ ] **Tests** `MessageReaderTest`:
+- [x] **Tests** `MessageReaderTest`:
   - `readsMessageInChatServiceFormat` — Körper und Header wie im Beleg der Spezifikation 2.3
   - `readsMessageWithOnlyContentType` — ohne `__TypeId__` (Format aus S5)
   - `rejectsBodyThatIsNotJson`
   - `rejectsMessageWithoutId`
   - `rejectsIdThatIsNotAUuid`
-- [ ] **Commit:** `feat: Nachricht aus dem rohen JSON lesen und prüfen`
+- [x] **Commit:** `feat: Nachricht aus dem rohen JSON lesen und prüfen`
 
 ## Task 7: Stapel in einer Transaktion schreiben, Duplikate überspringen
 
@@ -181,15 +181,15 @@ Datenbank geprüft, bevor RabbitMQ dazukommt.
 **Dateien:** Anlegen: `repository/MessageRepository.java`, Test
 `MessageRepositoryIntegrationTest.java`
 
-- [ ] `insertBatch(List<ChatMessage>)`: `@Transactional`, `JdbcTemplate.batchUpdate` mit
+- [x] `insertBatch(List<ChatMessage>)`: `@Transactional`, `JdbcTemplate.batchUpdate` mit
       `INSERT ... ON CONFLICT (id) DO NOTHING`; gibt die Zahl der neu gespeicherten Zeilen
       zurück.
-- [ ] **Tests** `MessageRepositoryIntegrationTest`:
+- [x] **Tests** `MessageRepositoryIntegrationTest`:
   - `storesEveryMessageOfTheBatch`
   - `storesSameIdOnlyOnceAcrossBatches` — Duplikat in einem zweiten Stapel (S5)
   - `storesSameIdOnlyOnceWithinOneBatch` — Duplikat im selben Stapel (S5)
   - `writesWholeBatchInOneTransaction` — `xact_commit` steigt für 500 Nachrichten um 1 (S4)
-- [ ] **Commit:** `feat: Stapel in einer Transaktion schreiben, Duplikate überspringen`
+- [x] **Commit:** `feat: Stapel in einer Transaktion schreiben, Duplikate überspringen`
 
 ## Task 8: Nachrichten stapelweise aus chat.persist holen und speichern
 
@@ -199,20 +199,20 @@ beide mit der Queue (Spezifikation 2.1, 3.1, 3.7).
 **Dateien:** Anlegen: `config/QueueNames.java`, `config/RabbitConfig.java`,
 `listener/PersistListener.java`, Test `PersistListenerIntegrationTest.java`
 
-- [ ] `RabbitConfig`: `chat.persist` und `chat.dlq` mit den Argumenten aus Spezifikation 2.1;
+- [x] `RabbitConfig`: `chat.persist` und `chat.dlq` mit den Argumenten aus Spezifikation 2.1;
       Container-Factory mit `batchListener`, `consumerBatchEnabled`, Stapel 500, Wartezeit
       200 ms, prefetch 500, ein Verbraucher.
-- [ ] `PersistListener.onBatch(List<Message>)`: jede Nachricht lesen; kaputte mit Header
+- [x] `PersistListener.onBatch(List<Message>)`: jede Nachricht lesen; kaputte mit Header
       `x-rejected-reason` nach `chat.dlq`; gültige mit `MessageRepository` schreiben;
       eine Logzeile `Batch of …`. Rückkehr ohne Fehler = ACK für den Stapel.
-- [ ] **Tests** `PersistListenerIntegrationTest`:
+- [x] **Tests** `PersistListenerIntegrationTest`:
   - `declaresQueuesWithChatServiceArguments`
   - `storesThousandMessagesAndEmptiesQueue` (S3)
   - `storesDuplicateOnlyOnceAndNothingInDeadLetterQueue` — zweimal dieselbe Nachricht, nur
     mit `content_type` (S5)
   - `movesBrokenMessageToDeadLetterQueue` — und die gültige Nachricht im selben Stapel wird
     trotzdem gespeichert
-- [ ] **Commit:** `feat: Nachrichten stapelweise aus chat.persist holen und speichern`
+- [x] **Commit:** `feat: Nachrichten stapelweise aus chat.persist holen und speichern`
 
 ## Task 9: Bei Datenbankausfall warten und denselben Stapel erneut schreiben
 
@@ -222,17 +222,17 @@ beide mit der Queue (Spezifikation 2.1, 3.1, 3.7).
 **Dateien:** Anlegen: `service/MessageWriter.java`, Test `DatabaseOutageIntegrationTest.java` ·
 Ändern: `PersistListener.java`, `application.yml`
 
-- [ ] `MessageWriter.writeUntilStored(List<ChatMessage>)`: ruft `insertBatch`; bei
+- [x] `MessageWriter.writeUntilStored(List<ChatMessage>)`: ruft `insertBatch`; bei
       `DataAccessException` oder `TransactionException` Pause 1 s, dann doppelt, höchstens
       10 s, und erneut; bei Unterbrechung (Stopp) Abbruch mit Ausnahme, damit der Stapel
       unbestätigt zurückgeht.
-- [ ] `PersistListener` schreibt über `MessageWriter`.
-- [ ] Pool: `connection-timeout: 5000`.
-- [ ] **Test** `DatabaseOutageIntegrationTest.keepsMessagesUntilDatabaseIsBack` (S7):
+- [x] `PersistListener` schreibt über `MessageWriter`.
+- [x] Pool: `connection-timeout: 5000`.
+- [x] **Test** `DatabaseOutageIntegrationTest.keepsMessagesUntilDatabaseIsBack` (S7):
       Datenbank sperren (`ALLOW_CONNECTIONS false`, alle Verbindungen beenden), 300 Nachrichten
       senden, 15 s warten — es darf nichts gespeichert und nichts in `chat.dlq` sein —,
       Datenbank freigeben, nach höchstens 90 s sind alle 300 da und `chat.persist` ist leer.
-- [ ] **Commit:** `feat: bei Datenbankausfall warten und denselben Stapel erneut schreiben`
+- [x] **Commit:** `feat: bei Datenbankausfall warten und denselben Stapel erneut schreiben`
 
 ## Task 10: batch-writer in docker-compose aufnehmen
 
@@ -241,21 +241,54 @@ lassen sich S2 bis S7 messen (Spezifikation 4.6).
 
 **Dateien:** Anlegen: `batch-writer/Dockerfile` · Ändern: `docker-compose.yml`, `README.md`
 
-- [ ] `Dockerfile` zweistufig wie beim `chat-service`, Build mit `-f batch-writer/pom.xml`.
-- [ ] Dienst `batch-writer`: Variablen aus Spezifikation 4.4, `depends_on` `rabbitmq` und
+- [x] `Dockerfile` zweistufig wie beim `chat-service`, Build mit `-f batch-writer/pom.xml`.
+- [x] Dienst `batch-writer`: Variablen aus Spezifikation 4.4, `depends_on` `rabbitmq` und
       `postgres` mit `service_healthy`, `restart: unless-stopped`, Netz `chat-net`, **kein**
       `ports:`.
-- [ ] README: Tabelle „Stand" für `batch-writer` und `postgres` nachführen.
-- [ ] **Test:** S2 aus Spezifikation 5 — alle vier Dienste laufen, `0` Port-Mappings.
-- [ ] **Commit:** `chore: batch-writer in docker-compose aufnehmen`
+- [x] README: Tabelle „Stand" für `batch-writer` und `postgres` nachführen.
+- [x] **Test:** S2 aus Spezifikation 5 — alle vier Dienste laufen, `0` Port-Mappings.
+- [x] **Commit:** `chore: batch-writer in docker-compose aufnehmen`
 
 ## Task 11: Abnahme S1 bis S8
 
 **Warum zuletzt:** Die Szenarien prüfen das Ganze, in der Reihenfolge und auf einem Stack,
 wie bei der Bewertung.
 
-- [ ] Frischer Klon in einem leeren Ordner, `.env` aus `.env.example`.
-- [ ] S1 bis S8 mit den Befehlen aus Spezifikation 5 nacheinander ausführen, ohne Aufräumen
+- [x] Frischer Klon in einem leeren Ordner, `.env` aus `.env.example`.
+- [x] S1 bis S8 mit den Befehlen aus Spezifikation 5 nacheinander ausführen, ohne Aufräumen
       dazwischen. Gemessene Werte notieren.
-- [ ] **Commit:** nur wenn ein Szenario eine Korrektur verlangt — dann jede Korrektur als
+- [x] **Commit:** nur wenn ein Szenario eine Korrektur verlangt — dann jede Korrektur als
       eigener Commit `fix: …`, mit Test.
+
+---
+
+## Nachtrag: Abweichungen bei der Umsetzung
+
+Was anders kam als geplant, in der Reihenfolge der Aufgaben. Die Commits sind unverändert,
+dieser Abschnitt erklärt sie.
+
+| Task | Geplant | Tatsächlich | Grund |
+|---|---|---|---|
+| 2 | Nach `up -d` **sofort** senden | Senden, **sobald** `Started ChatServiceApplication` im Log steht | Direkt nach `up -d` lief Tomcat im `chat-service` noch nicht (`curl` meldete `000`). Der gesuchte Fehler war ein anderer: mit `ping` gab die erste Nachricht nach dem Start `503`, mit `check_port_connectivity` `202` — beides gemessen |
+| 7 | Eine Transaktion pro Stapel über `xact_commit` prüfen | Über `xmin` der Zeilen prüfen | `pg_stat_database` wird verzögert nachgeführt, ein Test darauf wäre wackelig. `xmin` ist die Nummer der schreibenden Transaktion und damit exakt. Im Stack (S4) wird weiterhin `xact_commit` gemessen |
+| 8 | — | `IntegrationTestBase` hat Hilfsmethoden bekommen (senden, zählen, warten) | Der Listener- und der Ausfalltest brauchen sie beide |
+| 9 | Test zuerst rot | Test war schon **vor** dem `MessageWriter` grün | Spring AMQP gibt den Stapel bei einer Ausnahme per NACK mit requeue zurück, der Pool bremst jeden Versuch auf 30 s. Behalten habe ich den `MessageWriter` trotzdem, Begründung und Messung in Spezifikation 3.5: 24 s statt 52 s, 0 statt 2 Ausnahmen mit Stacktrace |
+| 10 | — | Der erste `docker compose up --build` scheiterte | Vorübergehender Download-Fehler von Maven Central im Build des `chat-service`. Der zweite Build lief ohne Änderung durch |
+
+## Nachtrag: Ergebnis der Abnahme (Task 11)
+
+Gemessen am 02.10.2026 in einem frischen Klon des Branches, `.env` aus `.env.example`,
+alle Szenarien nacheinander auf demselben Stack:
+
+| Nr | Gemessen | Erwartet | Bestanden |
+|---|---|---|---|
+| S1 | `chat-service` 14 Tests, `batch-writer` 19 Tests, `BUILD SUCCESS` | ein Lauf, alles grün | ja |
+| S2 | `rabbitmq`, `chat-service`, `postgres`, `batch-writer` laufen; 0 Port-Mappings | alle laufen, kein Port | ja |
+| S3 | 1000 × `202`; 1000 Zeilen beim ersten Nachsehen; `chat.persist` 0 | ≤ 60 s, Queue leer | ja |
+| S4 | 1000 Zeilen nach 7 s; `xact_commit` 99 → 133, also 34 (einschliesslich der eigenen Zählabfragen) | nichts verloren, ≤ 100 | ja |
+| S5 | 1 Zeile; `chat.dlq` 0 | 1 Zeile, DLQ leer | ja |
+| S6 | 2 Verbraucher an `chat.persist`; 1000 Zeilen, 1000 verschiedene Inhalte; Stapel im Log von `batch-writer-1` und `batch-writer-2` | alle da, keine doppelt | ja |
+| S7 | 300 Zeilen 4 s nach dem Neustart von Postgres; beide `batch-writer` laufen, `RestartCount` 0; `chat.dlq` 0 | ≤ 90 s, ohne Neustart | ja |
+| S8 | 0 Treffer für Streams; 0 Klassen oder Methoden ohne Kommentar; `.env` nicht im Repo | Regeln aus CLAUDE.md | ja |
+
+Kein Szenario hat eine Korrektur verlangt.

@@ -209,10 +209,16 @@ Begründung:
 - Ein Datenbankausfall ist ein Fehler **der Umgebung**, nicht der Nachricht. Die Nachricht
   in die Dead-Letter-Queue zu legen wäre falsch: dort holt sie niemand mehr ab.
 - PLANUNG.md 3.6 sieht „NACK mit requeue" vor. Davon weiche ich bewusst ab: Ein NACK
-  legt den Stapel sofort zurück in die Queue, er kommt sofort wieder, scheitert sofort
-  wieder — eine Endlosschleife unter Volllast gegen Broker und Datenbank. Den Stapel zu
-  behalten und mit wachsender Pause neu zu versuchen, erreicht dasselbe (nichts geht
-  verloren) ohne diese Schleife.
+  legt den Stapel zurück in die Queue, RabbitMQ liefert ihn sofort wieder aus — an diese
+  oder eine andere Instanz. Bei jedem Versuch wandern bis zu 500 Nachrichten hin und
+  her, und wie schnell der nächste Versuch kommt, hinge nur zufällig an der Wartezeit
+  des Verbindungspools. Den Stapel zu behalten und mit wachsender Pause neu zu
+  versuchen, erreicht dasselbe (nichts geht verloren), aber die Pause steht sichtbar im
+  eigenen Code.
+- *Nachgetragen nach der Umsetzung (Plan, Task 9):* Gemessen am Ausfalltest mit 300
+  Nachrichten und 15 s Ausfall: mit NACK und requeue 52 s Testdauer und 2 Ausnahmen mit
+  Stacktrace im Log, mit dem eigenen Warten 24 s und keine Ausnahme. Verloren ging in
+  beiden Fällen nichts.
 - Die Pause ist nach oben begrenzt (10 s), damit der Dienst nach einem Ausfall von 15 s
   spätestens rund 15 s später wieder schreibt.
 
@@ -227,8 +233,9 @@ bereits geschrieben, sind es Duplikate und werden übersprungen (3.3). War er no
 geschrieben, hat die Transaktion nichts hinterlassen — PostgreSQL schreibt einen Stapel ganz
 oder gar nicht.
 
-Wird der Dienst geordnet gestoppt, während er auf die Datenbank wartet (3.5), bricht er das
-Warten ab. Der Stapel bleibt unbestätigt und geht an RabbitMQ zurück.
+Wird der Dienst gestoppt, während er auf die Datenbank wartet (3.5), endet seine
+Verbindung zu RabbitMQ. Der Stapel ist zu diesem Zeitpunkt unbestätigt, RabbitMQ gibt ihn
+frei und liefert ihn der nächsten Instanz.
 
 ### 3.7 Kaputte Nachricht
 
