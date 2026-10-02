@@ -100,4 +100,23 @@ class PersistListenerIntegrationTest extends IntegrationTestBase {
         Object reason = deadLetter.getMessageProperties().getHeader("x-rejected-reason");
         assertNotNull(reason);
     }
+
+    /**
+     * Gültiges JSON, das PostgreSQL trotzdem nie speichern würde: ein Text mit
+     * dem Nullzeichen (Zeichencode 0). Es darf den Stapel nicht blockieren —
+     * es gehört nach chat.dlq, die gültige Nachricht daneben in die Tabelle.
+     */
+    @Test
+    void movesMessageTheDatabaseWouldRefuseToDeadLetterQueue() throws Exception {
+        String refusedJson = createJson(UUID.randomUUID(), "listener-refused", "vorher\\u0000nachher");
+        String validJson = createJson(UUID.randomUUID(), "listener-valid", "gültig");
+
+        sendToPersistQueue(refusedJson);
+        sendToPersistQueue(validJson);
+
+        waitForRows("listener-valid", 1, 30);
+        waitForQueue(QueueNames.DEAD_LETTER_QUEUE, 1, 10);
+        waitForQueue(QueueNames.PERSIST_QUEUE, 0, 10);
+        assertEquals(0, countRowsOf("listener-refused"));
+    }
 }

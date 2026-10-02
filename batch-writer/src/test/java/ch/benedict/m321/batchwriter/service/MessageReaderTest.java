@@ -101,6 +101,29 @@ class MessageReaderTest {
         assertThrows(InvalidMessageException.class, () -> messageReader.read(message));
     }
 
+    /**
+     * Das Nullzeichen (Zeichencode 0) ist in JSON erlaubt, PostgreSQL speichert
+     * es aber in keiner Textspalte. Im JSON steht es als Escape-Folge, die
+     * Jackson beim Lesen in das echte Zeichen verwandelt.
+     */
+    @Test
+    void rejectsTextWithNullCharacter() {
+        String bodyWithNullCharacter = CHAT_SERVICE_BODY.replace("Vertragsbeleg", "vorher\\u0000nachher");
+        Message message = createMessage(bodyWithNullCharacter, new MessageProperties());
+
+        assertThrows(InvalidMessageException.class, () -> messageReader.read(message));
+    }
+
+    /** Das Jahr 300000 ist kein echter Sendezeitpunkt, und timestamptz kann es nicht speichern. */
+    @Test
+    void rejectsSentAtOutsideYearsOneToNineThousandNineHundredNinetyNine() {
+        String bodyFromTheFarFuture = CHAT_SERVICE_BODY.replace(
+                "2026-10-02T09:53:41.916405321Z", "+300000-01-01T00:00:00Z");
+        Message message = createMessage(bodyFromTheFarFuture, new MessageProperties());
+
+        assertThrows(InvalidMessageException.class, () -> messageReader.read(message));
+    }
+
     /** Baut eine AMQP-Nachricht aus Text und Eigenschaften, wie sie aus der Queue käme. */
     private Message createMessage(String body, MessageProperties properties) {
         byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);

@@ -8,6 +8,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 
 /**
  * Die Eingangstür: macht aus dem rohen Körper einer AMQP-Nachricht eine
@@ -21,15 +22,24 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class MessageReader {
 
+    /** Das Nullzeichen (Zeichencode 0). PostgreSQL speichert es in keiner Textspalte. */
+    private static final char NULL_CHARACTER = 0;
+
+    /** Frühester Sendezeitpunkt, den wir annehmen: Beginn des Jahres 1. */
+    private static final Instant EARLIEST_SENT_AT = Instant.parse("0001-01-01T00:00:00Z");
+
+    /** Spätester Sendezeitpunkt, den wir annehmen: Ende des Jahres 9999. */
+    private static final Instant LATEST_SENT_AT = Instant.parse("9999-12-31T23:59:59Z");
+
     /** Der ObjectMapper von Spring Boot: kann UUID und Instant, ignoriert unbekannte Felder. */
     private final ObjectMapper objectMapper;
 
     /**
      * Liest eine Nachricht oder meldet, warum sie kaputt ist.
      *
-     * Erst wenn alle sechs Felder da sind, passt die Nachricht sicher in die
-     * Tabelle. Dann kann ein Stapel nur noch an der Datenbank scheitern, nie
-     * an seinem Inhalt.
+     * Erst wenn sie jede Bedingung der Tabelle erfüllt, passt die Nachricht
+     * sicher hinein. Dann kann ein Stapel nur noch an der Datenbank scheitern,
+     * nie an seinem Inhalt (Spezifikation 3.7).
      */
     public ChatMessage read(Message message) throws InvalidMessageException {
         byte[] body = message.getBody();
@@ -37,6 +47,7 @@ public class MessageReader {
 
         ChatMessage chatMessage = parse(json);
         checkRequiredFields(chatMessage);
+        checkStorableInDatabase(chatMessage);
 
         return chatMessage;
     }
@@ -76,6 +87,31 @@ public class MessageReader {
     private void requireField(Object value, String fieldName) throws InvalidMessageException {
         if (value == null) {
             throw new InvalidMessageException("Missing field " + fieldName);
+        }
+    }
+
+    /**
+     * Prüft, was PostgreSQL ablehnen würde, obwohl das JSON gültig ist.
+     *
+     * Ohne diese Prüfung hält der MessageWriter die Ablehnung für einen
+     * Datenbankausfall und versucht es endlos — eine einzige Nachricht würde
+     * die Instanz für immer blockieren.
+     */
+    private void checkStorableInDatabase(ChatMessage chatMessage) throws InvalidMessageException {
+        rejectNullCharacter(chatMessage.senderId(), "senderId");
+        rejectNullCharacter(chatMessage.senderName(), "senderName");
+        rejectNullCharacter(chatMessage.content(), "content");
+
+        Instant sentAt = chatMessage.sentAt();
+        if (sentAt.isBefore(EARLIEST_SENT_AT) || sentAt.isAfter(LATEST_SENT_AT)) {
+            throw new InvalidMessageException("Field sentAt is outside the years 1 to 9999: " + sentAt);
+        }
+    }
+
+    /** Ein Text mit dem Nullzeichen passt in keine Textspalte von PostgreSQL. */
+    private void rejectNullCharacter(String value, String fieldName) throws InvalidMessageException {
+        if (value.indexOf(NULL_CHARACTER) >= 0) {
+            throw new InvalidMessageException("Field " + fieldName + " contains the null character");
         }
     }
 }
