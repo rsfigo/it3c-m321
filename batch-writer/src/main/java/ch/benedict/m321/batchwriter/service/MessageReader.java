@@ -12,7 +12,7 @@ import java.time.Instant;
 
 /**
  * Die Eingangstür: macht aus dem rohen Körper einer AMQP-Nachricht eine
- * ChatMessage und prüft die Pflichtfelder.
+ * ChatMessage und prüft, ob sie vollständig ist und in die Tabelle passt.
  *
  * Der Leser schaut nur auf den Körper, nie auf die Header. Der Header
  * __TypeId__ nennt eine Klasse des chat-service, die es hier nicht gibt, und

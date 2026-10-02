@@ -307,15 +307,15 @@ prüft das, deshalb hat die Abnahme es nicht gezeigt.
 **Dateien:** Ändern: `MessageReader.java`, `MessageReaderTest.java`,
 `PersistListenerIntegrationTest.java`
 
-- [ ] **Test** `PersistListenerIntegrationTest.movesMessageTheDatabaseWouldRefuseToDeadLetterQueue`:
+- [x] **Test** `PersistListenerIntegrationTest.movesMessageTheDatabaseWouldRefuseToDeadLetterQueue`:
       eine Nachricht mit Nullzeichen und eine gültige; die gültige ist gespeichert, die andere
       in `chat.dlq`, `chat.persist` leer. Vor der Korrektur rot: die gültige Nachricht kommt
       nie an.
-- [ ] **Tests** `MessageReaderTest.rejectsTextWithNullCharacter`,
+- [x] **Tests** `MessageReaderTest.rejectsTextWithNullCharacter`,
       `rejectsSentAtOutsideYearsOneToNineThousandNineHundredNinetyNine`.
-- [ ] `MessageReader` prüft nach den Pflichtfeldern: kein Nullzeichen in den drei Texten,
+- [x] `MessageReader` prüft nach den Pflichtfeldern: kein Nullzeichen in den drei Texten,
       `sentAt` in den Jahren 1 bis 9999.
-- [ ] **Commit:** `fix: Nachrichten, die PostgreSQL ablehnen würde, blockieren den Stapel nicht mehr`
+- [x] **Commit:** `fix: Nachrichten, die PostgreSQL ablehnen würde, blockieren den Stapel nicht mehr`
 
 ## Task 13: Test für unbekannte JSON-Felder
 
@@ -324,6 +324,16 @@ war nur eine Eigenschaft des ObjectMappers von Spring Boot, aber nirgends geprü
 
 **Dateien:** Ändern: `MessageReaderTest.java`
 
-- [ ] **Test** `MessageReaderTest.ignoresUnknownFields`: ein Körper mit einem zusätzlichen Feld
+- [x] **Test** `MessageReaderTest.ignoresUnknownFields`: ein Körper mit einem zusätzlichen Feld
       wird gelesen.
-- [ ] **Commit:** `test: unbekannte JSON-Felder brechen den Leser nicht`
+- [x] **Commit:** `test: unbekannte JSON-Felder brechen den Leser nicht`
+
+## Nachtrag: Abnahme nach Task 12 und 13
+
+Wiederholt in einem frischen Klon nach dem Commit von Task 13, `.env` aus `.env.example`:
+S1 mit `chat-service` 14 und `batch-writer` 23 Tests grün; S2 0 Port-Mappings; S3 1000 Zeilen
+nach 4 s; S4 1000 Zeilen, 31 Transaktionen; S5 1 Zeile, `chat.dlq` 0; S6 2 Verbraucher,
+1000 verschiedene Zeilen, beide Instanzen schreiben; S7 300 Zeilen 17 s nach dem Neustart von
+Postgres, `RestartCount` 0; S8 ohne Befund. Alle acht bestanden.
+
+Der Klassenkommentar des `MessageReader` nennt jetzt auch die neue Prüfung.
