@@ -14,6 +14,15 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:chat}
     username: ${POSTGRES_USER:chat}
     password: ${POSTGRES_PASSWORD:chat}
+  sql:
+    init:
+      # schema.sql bei jedem Start ausführen, nicht nur bei eingebetteten
+      # Datenbanken. Das Skript ist mit IF NOT EXISTS wiederholbar.
+      mode: always
+      # Starten zwei Instanzen gleichzeitig auf einer leeren Datenbank, kann
+      # eine das CREATE verlieren. Die Tabelle gibt es dann trotzdem, also
+      # weiterlaufen statt abstürzen.
+      continue-on-error: true
 
 logging:
   level:
