@@ -1,4 +1,4 @@
-# Ausbaustufe 2: Broker, chat-service und die Datenbank für den batch-writer.
+# Ausbaustufe 2: Broker, chat-service, Datenbank und batch-writer.
 # Keycloak, web-gateway und load-generator kommen in späteren Schritten dazu.
 services:
 
@@ -52,6 +52,32 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+
+  # Der einzige Schreiber in die Tabelle message. Holt die Nachrichten
+  # stapelweise aus chat.persist. Skalierbar mit --scale batch-writer=N:
+  # alle Instanzen teilen sich dieselbe Queue (Competing Consumers).
+  batch-writer:
+    build:
+      context: .
+      dockerfile: batch-writer/Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    # Nur ein Sicherheitsnetz: der Dienst soll laut Spezifikation 3.5 gar
+    # nicht abstürzen. Von Hand gestoppt (Szenario S4) bleibt er gestoppt.
+    restart: unless-stopped
+    networks:
+      - chat-net
 
 # KEIN ports:-Eintrag in dieser Datei. Der einzige offene Port des
 # Gesamtsystems gehört später dem web-gateway.

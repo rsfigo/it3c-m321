@@ -25,7 +25,7 @@ Alle Aufgaben werden in **deinem Fork** gelöst. Das Original-Repository bleibt 
 
 ```bash
 mvn test                         # alle Tests, RabbitMQ kommt per Testcontainers
-docker compose up --build        # RabbitMQ und chat-service im Netz chat-net
+docker compose up --build        # RabbitMQ, chat-service, PostgreSQL und batch-writer im Netz chat-net
 ```
 
 Der `chat-service` veröffentlicht bewusst **keinen Port** auf den Host. Der einzige offene Port
@@ -37,8 +37,8 @@ des Gesamtsystems gehört später dem Gateway.
 |---|---|---|---|
 | chat-service | Spring Boot 3, Java 21 | Nimmt Nachrichten per `POST /messages` an, legt sie auf Queue und Fanout-Exchange | vorhanden |
 | rabbitmq | RabbitMQ 3.13 | Message Queue zwischen den Services | vorhanden |
-| batch-writer | Spring Boot 3, Java 21 | Einziger Schreiber in die Datenbank | folgt |
-| postgres | PostgreSQL | Speichert den Chat-Verlauf | folgt |
+| batch-writer | Spring Boot 3, Java 21 | Einziger Schreiber in die Datenbank: holt Nachrichten stapelweise aus `chat.persist` | vorhanden |
+| postgres | PostgreSQL 16 | Speichert den Chat-Verlauf in der Tabelle `message` | vorhanden |
 | keycloak | Keycloak | Login (OIDC) | folgt |
 | web-gateway | nginx | Einziger nach aussen offener Port | folgt |
 | Web-UI | React | Browser-Client | folgt |
