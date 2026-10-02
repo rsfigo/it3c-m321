@@ -5,7 +5,6 @@ import ch.benedict.m321.batchwriter.dto.ChatMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,9 +21,6 @@ class MessageRepositoryIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     private MessageRepository messageRepository;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     /** Jeder Test beginnt mit einer leeren Tabelle, sonst zählt er die Zeilen des vorigen mit. */
     @BeforeEach

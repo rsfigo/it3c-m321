@@ -3,7 +3,6 @@ package ch.benedict.m321.batchwriter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import javax.sql.DataSource;
@@ -19,9 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * (Abschnitt 4.1): sechs Spalten, Primärschlüssel auf id, Index für den Raum.
  */
 class SchemaIntegrationTest extends IntegrationTestBase {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private DataSource dataSource;
