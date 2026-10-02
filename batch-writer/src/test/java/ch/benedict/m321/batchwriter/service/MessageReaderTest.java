@@ -75,6 +75,20 @@ class MessageReaderTest {
         assertEquals(UUID.fromString("4a823a82-efc9-413b-b98e-b5414d6b9401"), chatMessage.id());
     }
 
+    /**
+     * Spezifikation 2.2: Ergänzt der chat-service später ein Feld, darf der
+     * batch-writer nicht brechen. Das zusätzliche Feld wird einfach übergangen.
+     */
+    @Test
+    void ignoresUnknownFields() throws InvalidMessageException {
+        String bodyWithExtraField = CHAT_SERVICE_BODY.replace("{\"id\"", "{\"priority\":\"high\",\"id\"");
+        Message message = createMessage(bodyWithExtraField, new MessageProperties());
+
+        ChatMessage chatMessage = messageReader.read(message);
+
+        assertEquals("Vertragsbeleg", chatMessage.content());
+    }
+
     /** Ein Körper, der gar kein JSON ist, wird erkannt und nicht durchgereicht. */
     @Test
     void rejectsBodyThatIsNotJson() {
