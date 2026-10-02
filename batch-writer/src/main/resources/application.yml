@@ -14,6 +14,10 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:chat}
     username: ${POSTGRES_USER:chat}
     password: ${POSTGRES_PASSWORD:chat}
+    hikari:
+      # Höchstens 5 s auf eine Verbindung warten. Ist die Datenbank weg, scheitert
+      # jeder Versuch damit schnell, und der nächste folgt bald (Spezifikation 3.5).
+      connection-timeout: 5000
   sql:
     init:
       # schema.sql bei jedem Start ausführen, nicht nur bei eingebetteten

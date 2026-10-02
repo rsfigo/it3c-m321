@@ -2,9 +2,9 @@ package ch.benedict.m321.batchwriter.listener;
 
 import ch.benedict.m321.batchwriter.config.QueueNames;
 import ch.benedict.m321.batchwriter.dto.ChatMessage;
-import ch.benedict.m321.batchwriter.repository.MessageRepository;
 import ch.benedict.m321.batchwriter.service.InvalidMessageException;
 import ch.benedict.m321.batchwriter.service.MessageReader;
+import ch.benedict.m321.batchwriter.service.MessageWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -30,7 +30,7 @@ public class PersistListener {
     private static final String REJECTED_REASON_HEADER = "x-rejected-reason";
 
     private final MessageReader messageReader;
-    private final MessageRepository messageRepository;
+    private final MessageWriter messageWriter;
     private final RabbitTemplate rabbitTemplate;
 
     /**
@@ -38,11 +38,12 @@ public class PersistListener {
      *
      * Kehrt die Methode ohne Ausnahme zurück, bestätigt Spring AMQP ALLE
      * Nachrichten des Stapels bei RabbitMQ. Das passiert also erst nach dem
-     * COMMIT in insertBatch — vorher ist nichts bestätigt, und bei einem
-     * Absturz liefert RabbitMQ den Stapel erneut (Spezifikation 3.1, 3.6).
+     * COMMIT — vorher ist nichts bestätigt, und bei einem Absturz liefert
+     * RabbitMQ den Stapel erneut (Spezifikation 3.1, 3.6). Ist die Datenbank
+     * weg, wartet writeUntilStored, bis sie zurück ist (Spezifikation 3.5).
      */
     @RabbitListener(queues = QueueNames.PERSIST_QUEUE, containerFactory = "batchListenerContainerFactory")
-    public void onBatch(List<Message> messages) {
+    public void onBatch(List<Message> messages) throws InterruptedException {
         List<ChatMessage> validMessages = new ArrayList<>();
         int deadLettered = 0;
 
@@ -58,7 +59,7 @@ public class PersistListener {
 
         int stored = 0;
         if (!validMessages.isEmpty()) {
-            stored = messageRepository.insertBatch(validMessages);
+            stored = messageWriter.writeUntilStored(validMessages);
         }
 
         int duplicates = validMessages.size() - stored;
