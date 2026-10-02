@@ -292,3 +292,38 @@ alle Szenarien nacheinander auf demselben Stack:
 | S8 | 0 Treffer für Streams; 0 Klassen oder Methoden ohne Kommentar; `.env` nicht im Repo | Regeln aus CLAUDE.md | ja |
 
 Kein Szenario hat eine Korrektur verlangt.
+
+---
+
+## Task 12: Nachrichten, die PostgreSQL ablehnen würde, gehen nach chat.dlq
+
+**Warum nach der Abnahme:** Beim Durchlesen des eigenen Codes aufgefallen. Die Spezifikation
+behauptete in 3.7, jede gültig gelesene Nachricht passe in die Tabelle. Für Texte mit dem
+Nullzeichen und für Zeitstempel ausserhalb des Bereichs von `timestamptz` stimmte das nicht.
+Ein Test hat es bestätigt: Eine solche Nachricht blockiert die Instanz für immer, weil der
+`MessageWriter` die Ablehnung wie einen Datenbankausfall behandelt. Keines der Szenarien
+prüft das, deshalb hat die Abnahme es nicht gezeigt.
+
+**Dateien:** Ändern: `MessageReader.java`, `MessageReaderTest.java`,
+`PersistListenerIntegrationTest.java`
+
+- [ ] **Test** `PersistListenerIntegrationTest.movesMessageTheDatabaseWouldRefuseToDeadLetterQueue`:
+      eine Nachricht mit Nullzeichen und eine gültige; die gültige ist gespeichert, die andere
+      in `chat.dlq`, `chat.persist` leer. Vor der Korrektur rot: die gültige Nachricht kommt
+      nie an.
+- [ ] **Tests** `MessageReaderTest.rejectsTextWithNullCharacter`,
+      `rejectsSentAtOutsideYearsOneToNineThousandNineHundredNinetyNine`.
+- [ ] `MessageReader` prüft nach den Pflichtfeldern: kein Nullzeichen in den drei Texten,
+      `sentAt` in den Jahren 1 bis 9999.
+- [ ] **Commit:** `fix: Nachrichten, die PostgreSQL ablehnen würde, blockieren den Stapel nicht mehr`
+
+## Task 13: Test für unbekannte JSON-Felder
+
+**Warum:** Spezifikation 2.2 verspricht, dass zusätzliche Felder den Leser nicht brechen. Das
+war nur eine Eigenschaft des ObjectMappers von Spring Boot, aber nirgends geprüft.
+
+**Dateien:** Ändern: `MessageReaderTest.java`
+
+- [ ] **Test** `MessageReaderTest.ignoresUnknownFields`: ein Körper mit einem zusätzlichen Feld
+      wird gelesen.
+- [ ] **Commit:** `test: unbekannte JSON-Felder brechen den Leser nicht`

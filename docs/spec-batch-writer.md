@@ -239,9 +239,17 @@ frei und liefert ihn der nächsten Instanz.
 
 ### 3.7 Kaputte Nachricht
 
-Ist der Körper kein gültiges JSON, fehlt ein Pflichtfeld oder hat ein Feld den falschen Typ
-(zum Beispiel keine UUID in `id`), dann legt der Dienst **genau diese Nachricht** sofort nach
-`chat.dlq` und behandelt den Rest des Stapels normal.
+Eine Nachricht ist kaputt, wenn
+
+- der Körper kein gültiges JSON ist,
+- ein Pflichtfeld fehlt oder den falschen Typ hat (zum Beispiel keine UUID in `id`),
+- ein Text (`senderId`, `senderName`, `content`) das Nullzeichen (Zeichencode 0) enthält —
+  in JSON ist es erlaubt, PostgreSQL speichert es in keiner Textspalte,
+- `sentAt` nicht in den Jahren 1 bis 9999 liegt — das ist kein echter Sendezeitpunkt, und
+  Jahre nach 294276 kann `timestamptz` gar nicht speichern.
+
+Dann legt der Dienst **genau diese Nachricht** sofort nach `chat.dlq` und behandelt den Rest
+des Stapels normal.
 
 Begründung: Dieser Fehler liegt in der Nachricht selbst. Ein zweiter oder dritter Versuch
 ergibt dasselbe Ergebnis. PLANUNG.md nennt „nach 3 fehlgeschlagenen Versuchen" — für
@@ -249,9 +257,22 @@ Fehler, die sich durch Warten nicht bessern, wären die zwei zusätzlichen Versu
 verschwendet. Wichtiger noch: Bliebe eine kaputte Nachricht im Stapel, würde sie bei jedem
 Versuch den ganzen Stapel scheitern lassen und die Queue für immer blockieren.
 
-Damit ein Stapel nur noch an der Datenbank scheitern kann und nicht am Inhalt, ist die
-Tabelle so gebaut, dass jede gültig gelesene Nachricht hineinpasst: Texte ohne
-Längenbegrenzung, kein Fremdschlüssel (4.2).
+Damit ein Stapel nur noch an der Datenbank scheitern kann und nicht am Inhalt, deckt der
+Leser **jede** Bedingung der Tabelle ab:
+
+| Bedingung der Tabelle | Wer sie sicherstellt |
+|---|---|
+| `NOT NULL` auf allen Spalten | Leser: Pflichtfelder |
+| Typ `UUID` für `id` und `room_id` | Leser: Jackson lehnt keine UUID ab |
+| Primärschlüssel `id` | `ON CONFLICT (id) DO NOTHING` (3.3) |
+| Text ohne Nullzeichen | Leser: Nullzeichen |
+| Bereich von `timestamptz` | Leser: Jahre 1 bis 9999 |
+| Länge | gibt es nicht: `VARCHAR` ohne Länge (4.2) |
+| Fremdschlüssel | gibt es nicht (4.2) |
+
+*Nachgetragen nach der Abnahme (Plan, Task 12):* Nullzeichen und Zeitbereich fehlten in der
+ersten Fassung. Eine einzige solche Nachricht hat im Test die Instanz für immer blockiert:
+der `MessageWriter` hielt die Ablehnung für einen Datenbankausfall und versuchte es endlos.
 
 ### 3.8 RabbitMQ weg
 
