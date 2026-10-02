@@ -11,7 +11,10 @@ services:
     networks:
       - chat-net
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      # "ping" ist schon grün, bevor der AMQP-Port Verbindungen annimmt. Dann
+      # startet der chat-service zu früh und antwortet auf die ersten
+      # Nachrichten mit 503. check_port_connectivity wartet auf den Port.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
       interval: 5s
       timeout: 5s
       retries: 12
