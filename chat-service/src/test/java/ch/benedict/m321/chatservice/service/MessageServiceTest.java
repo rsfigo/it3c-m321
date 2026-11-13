@@ -32,6 +32,7 @@ class MessageServiceTest {
             super(null);
         }
 
+        /** Merkt sich die Nachricht und zählt mit, statt zu senden — so kann der Test nachher prüfen, was rausging. */
         @Override
         public void publish(ChatMessage message) {
             this.published = message;
@@ -39,6 +40,7 @@ class MessageServiceTest {
         }
     }
 
+    /** Der Dienst, nicht der Aufrufer, vergibt ID und Zeitstempel. Dieser Test hält das fest. */
     @Test
     void assignsIdAndTimestamp() {
         RecordingPublisher publisher = new RecordingPublisher();
@@ -53,6 +55,11 @@ class MessageServiceTest {
         assertNotNull(response.sentAt());
     }
 
+    /**
+     * Die ID in der Antwort muss dieselbe sein wie in der veröffentlichten Nachricht,
+     * sonst kann der Absender seine Nachricht später nicht wiedererkennen. Und sie darf
+     * nur einmal rausgehen, sonst erscheint sie doppelt im Chat.
+     */
     @Test
     void publishesExactlyOnceWithTheSameId() {
         RecordingPublisher publisher = new RecordingPublisher();
@@ -70,6 +77,7 @@ class MessageServiceTest {
         assertEquals("Hallo", publisher.published.content());
     }
 
+    /** Zweimal derselbe Text ist trotzdem zweimal eine eigene Nachricht und braucht deshalb zwei verschiedene IDs. */
     @Test
     void assignsADifferentIdEveryTime() {
         RecordingPublisher publisher = new RecordingPublisher();

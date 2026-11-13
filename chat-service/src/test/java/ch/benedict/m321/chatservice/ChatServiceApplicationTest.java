@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class ChatServiceApplicationTest {
 
+    /** Schlägt fehl, sobald eine Bean oder eine Einstellung fehlt — noch bevor ein anderer Test etwas Genaueres prüft. */
     @Test
     void contextLoads() {
         // Kein Assert nötig. Fährt der Kontext nicht hoch, wirft Spring

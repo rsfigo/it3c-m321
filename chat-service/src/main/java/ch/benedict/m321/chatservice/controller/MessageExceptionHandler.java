@@ -18,6 +18,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class MessageExceptionHandler {
 
+    /**
+     * Fängt jeden Fehler beim Senden an RabbitMQ an einer einzigen Stelle ab,
+     * damit nicht jeder Controller selbst try/catch schreiben muss. Der Fehler
+     * wird geloggt, und der Aufrufer bekommt 503 statt einer nichtssagenden 500.
+     */
     @ExceptionHandler(AmqpException.class)
     public ResponseEntity<String> handleBrokerNotAvailable(AmqpException exception) {
         log.error("Broker not reachable, message rejected", exception);

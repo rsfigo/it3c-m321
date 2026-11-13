@@ -22,12 +22,14 @@ class SendMessageRequestTest {
 
     private Validator validator;
 
+    /** Baut den Validator einmal pro Test, damit kein Test vom Zustand eines anderen abhängt. */
     @BeforeEach
     void setUp() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         this.validator = factory.getValidator();
     }
 
+    /** Gegenprobe: eine vollständige Nachricht darf keine Regel verletzen, sonst wären die Regeln zu streng. */
     @Test
     void acceptsCompleteRequest() {
         SendMessageRequest request = new SendMessageRequest(
@@ -38,6 +40,7 @@ class SendMessageRequestTest {
         assertTrue(violations.isEmpty());
     }
 
+    /** Nur Leerzeichen sind keine Nachricht. Dieser Test hält fest, dass so etwas gar nicht erst in die Queue kommt. */
     @Test
     void rejectsBlankContent() {
         SendMessageRequest request = new SendMessageRequest(
@@ -48,6 +51,7 @@ class SendMessageRequestTest {
         assertEquals(1, violations.size());
     }
 
+    /** Ohne roomId weiss niemand, wohin die Nachricht gehört. Darum muss sie schon hier abgewiesen werden. */
     @Test
     void rejectsMissingRoomId() {
         SendMessageRequest request = new SendMessageRequest(

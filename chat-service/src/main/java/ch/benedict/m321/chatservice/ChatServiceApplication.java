@@ -13,6 +13,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ChatServiceApplication {
 
+    /**
+     * Die JVM braucht einen Einstiegspunkt, um den Dienst zu starten.
+     * Wir übergeben sofort an Spring Boot, das Controller, Service und
+     * RabbitMQ-Verbindung für uns zusammenbaut.
+     */
     public static void main(String[] args) {
         SpringApplication.run(ChatServiceApplication.class, args);
     }

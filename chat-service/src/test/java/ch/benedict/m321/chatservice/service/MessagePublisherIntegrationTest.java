@@ -57,6 +57,7 @@ class MessagePublisherIntegrationTest {
         rabbitAdmin.purgeQueue(QueueNames.PERSIST_QUEUE);
     }
 
+    /** Prüft den Schreibweg: die Nachricht muss in der Persist-Queue landen, damit der batch-writer sie speichern kann. */
     @Test
     void publishesToPersistQueue() {
         ChatMessage message = createMessage("Hallo Schreibweg");
@@ -69,6 +70,7 @@ class MessagePublisherIntegrationTest {
         assertEquals("Hallo Schreibweg", persisted.content());
     }
 
+    /** Prüft den Zustellweg: die Nachricht muss über den Fanout bei jedem web-gateway ankommen, damit sie live erscheint. */
     @Test
     void publishesToDeliveryExchange() {
         // Wir spielen ein web-gateway: eigene Queue an den Fanout binden.

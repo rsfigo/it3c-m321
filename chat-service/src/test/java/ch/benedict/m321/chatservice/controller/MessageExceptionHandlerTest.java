@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class MessageExceptionHandlerTest {
 
+    /** Sichert ab, dass ein Broker-Ausfall als 503 mit Begründung beim Aufrufer ankommt, nicht als 500. */
     @Test
     void answersWithServiceUnavailable() {
         MessageExceptionHandler handler = new MessageExceptionHandler();

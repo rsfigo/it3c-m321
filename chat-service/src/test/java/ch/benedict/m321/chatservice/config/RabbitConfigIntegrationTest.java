@@ -33,6 +33,7 @@ class RabbitConfigIntegrationTest {
     @Autowired
     private RabbitAdmin rabbitAdmin;
 
+    /** Ohne die Persist-Queue gäbe es keinen Schreibweg: der batch-writer hätte nichts zum Lesen. */
     @Test
     void declaresPersistQueue() {
         Properties properties = rabbitAdmin.getQueueProperties(QueueNames.PERSIST_QUEUE);
@@ -40,6 +41,7 @@ class RabbitConfigIntegrationTest {
         assertNotNull(properties);
     }
 
+    /** Ohne die Dead-Letter-Queue gingen kaputte Nachrichten still verloren, statt zur Fehlersuche liegen zu bleiben. */
     @Test
     void declaresDeadLetterQueue() {
         Properties properties = rabbitAdmin.getQueueProperties(QueueNames.DEAD_LETTER_QUEUE);

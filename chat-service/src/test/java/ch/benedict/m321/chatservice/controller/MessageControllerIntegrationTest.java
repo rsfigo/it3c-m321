@@ -40,6 +40,10 @@ class MessageControllerIntegrationTest {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    /**
+     * Der Normalfall von aussen gesehen: eine gültige Anfrage bekommt 202 mit ID
+     * und Zeitstempel, und dieselbe Nachricht liegt danach wirklich in der Queue.
+     */
     @Test
     void acceptsMessageAndPutsItOnTheQueue() throws Exception {
         String requestBody = """
@@ -68,6 +72,7 @@ class MessageControllerIntegrationTest {
         assertEquals("Anna Muster", message.senderName());
     }
 
+    /** Beweist, dass die Validierung am HTTP-Eingang greift und eine leere Nachricht mit 400 abgewiesen wird. */
     @Test
     void rejectsEmptyContent() throws Exception {
         String requestBody = """
