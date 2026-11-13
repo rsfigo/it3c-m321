@@ -68,7 +68,9 @@ Umgebungsvariablen).
 
 **Test:** Der `awk`-Check gibt nichts aus, `mvn clean test` im chat-service ist grün.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** 
+Geprüft: awk-Check vorher 18 Stellen, nachher leer	
+Korrigiert: Nichts
 
 ---
 
@@ -94,7 +96,9 @@ Spezifikation 4 und liest sie mit genau einem Thread.
 `exclusive`, `auto-delete`, nicht durable, `x-max-length` 950, `x-overflow` `drop-head`, an
 `chat.delivery` gebunden, 1 Consumer.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** 
+Geprüft: DeliveryQueueIntegrationTest: durable false, exclusive, auto-delete, 950, drop-head, 1 Consumer
+Korrigiert: Der Bindungs-Test fand zuerst die falsche Zeile, weil jede Queue auch an den Standard-Exchange mit leerem Namen gebunden ist.
 
 ---
 
@@ -121,7 +125,9 @@ Instanz-Queue geht als `id:` + `data:` an alle Clients desselben Raums (Spezifik
 Content-Type beginnt mit `text/event-stream`, ein `POST` kommt als Ereignis im eigenen Raum
 an, im anderen Raum nicht.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** 
+Geprüft: 400 bei fehlender und falscher roomId, Content-Type, eigener Raum ja, anderer Raum nein
+Korrigiert: 1. Die Header kamen nie beim Client an → :connected 2. Der JSON-Konverter lehnte die Klasse ab → einfacher Konverter 3. Der Test-Client hing beim zweiten Stream → eigener HttpClient pro Stream
 
 ---
 
@@ -147,7 +153,9 @@ ihres Raums in Reihenfolge, danach live. Unbekannte ID ergibt `event:gap` (Spezi
 Nachrichten während der Trennung, Neuverbindung mit `Last-Event-ID` bekommt genau diese 50
 in Reihenfolge, danach eine Live-Nachricht, kein `gap`.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** 
+Geprüft: ReconnectIntegrationTest: genau 50, in Reihenfolge, danach live; unbekannte ID ergibt gap
+Korrigiert: LiveDeliveryTest ist weggefallen (Änderung 1)
 
 ---
 
@@ -170,7 +178,9 @@ Raum (Spezifikation 3.2).
 
 **Test:** `TwoInstancesIntegrationTest` grün.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** 
+Geprüft: TwoInstancesIntegrationTest: je 200, keine doppelt, Reihenfolge, Raum B 0, 2 Queues mit je 1 Consumer
+Korrigiert: Nichts
 
 ---
 
@@ -191,7 +201,8 @@ sich mit `--scale` starten und sauber herunterfahren.
 **Test:** `docker compose up -d --build --scale chat-service=2` startet, `docker compose ps`
 zeigt keine Ports, `--scale chat-service=1` beendet eine Instanz.
 
-**Geprüft und korrigiert:**
+**Geprüft und korrigiert:** Tabelle nachgeführt, kein ports und kein container_name
+Korrigiert: Der S8-grep fand «Stream.» am Ende von zwei Kommentarsätzen, beide umformuliert
 
 ---
 
@@ -212,6 +223,8 @@ Ergebnis.
 Push.
 
 **Geprüft und korrigiert:**
+Geprüft: S1 bis S8 im frischen Klon bestanden
+Korrigiert: Im alten Ordner war S5 bei 0, weil der Datenträger ein anderes Passwort hatte. Das ist kein Codefehler, im frischen Klon gab es 100.
 
 ---
 
