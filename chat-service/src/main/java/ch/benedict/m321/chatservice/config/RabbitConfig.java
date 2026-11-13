@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -101,13 +102,16 @@ public class RabbitConfig {
      * Anzeige-Kopie, das Original liegt in chat.persist.
      *
      * Der Configurer übernimmt zuerst die Grundeinstellungen von Spring
-     * Boot, zum Beispiel den JSON-Konverter.
+     * Boot. Den JSON-Konverter ersetzen wir danach durch den einfachen
+     * Konverter: Der Listener will das JSON roh weitergeben, und der
+     * JSON-Konverter würde vorher eine ChatMessage daraus bauen wollen.
      */
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             SimpleRabbitListenerContainerFactoryConfigurer configurer, ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         configurer.configure(factory, connectionFactory);
+        factory.setMessageConverter(new SimpleMessageConverter());
         factory.setConcurrentConsumers(1);
         factory.setMaxConcurrentConsumers(1);
         factory.setPrefetchCount(QueueNames.DELIVERY_PREFETCH);
