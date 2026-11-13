@@ -4,6 +4,7 @@ import ch.benedict.m321.chatservice.service.LiveDelivery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -33,11 +34,15 @@ public class StreamController {
     /**
      * Öffnet einen Stream für einen Raum. Die Verbindung bleibt offen, und
      * LiveDelivery schreibt jede neue Nachricht dieses Raums hinein.
+     *
+     * Der Header Last-Event-ID ist freiwillig. Der Browser schickt ihn bei
+     * einer Neuverbindung von selbst mit, dann wird nachgeliefert.
      */
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter openStream(@RequestParam UUID roomId) {
+    public SseEmitter openStream(@RequestParam UUID roomId,
+                                 @RequestHeader(name = "Last-Event-ID", required = false) String lastEventId) {
         SseEmitter client = new SseEmitter(NO_TIMEOUT);
-        liveDelivery.connect(roomId, client);
+        liveDelivery.connect(roomId, lastEventId, client);
         return client;
     }
 }

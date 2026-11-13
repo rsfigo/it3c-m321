@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,16 +43,67 @@ public class LiveDelivery {
     private final Map<UUID, List<SseEmitter>> clientsByRoom = new ConcurrentHashMap<>();
 
     /**
-     * Meldet eine neue Verbindung für einen Raum an. Ab jetzt bekommt sie
-     * jede Nachricht dieses Raums.
+     * So viele Nachrichten behält die Instanz fürs Nachliefern. S7 braucht
+     * nur 50, 10'000 ist eine Reserve für längere Unterbrüche
+     * (Spezifikation 4, Umgebungsvariablen).
      */
-    public void connect(UUID roomId, SseEmitter client) {
+    static final int BUFFER_SIZE = 10_000;
+
+    /** Die letzten Nachrichten aller Räume, die älteste vorne. Nur unter dem Lock benutzen. */
+    private final Deque<LiveMessage> buffer = new ArrayDeque<>();
+
+    /**
+     * Meldet eine neue Verbindung für einen Raum an. Ab jetzt bekommt sie
+     * jede Nachricht dieses Raums. Bringt der Client eine Last-Event-ID mit
+     * (darf null sein), bekommt er zuerst die verpassten Nachrichten.
+     */
+    public void connect(UUID roomId, String lastEventId, SseEmitter client) {
         removeWhenClosed(roomId, client);
         synchronized (lock) {
             sendConnectedComment(client);
+            if (lastEventId != null && !lastEventId.isBlank()) {
+                sendMissedMessages(roomId, lastEventId, client);
+            }
             addClient(roomId, client);
         }
-        log.debug("Client connected to room {}", roomId);
+        log.debug("Client connected to room {} with Last-Event-ID {}", roomId, lastEventId);
+    }
+
+    /**
+     * Liefert nach, was der Client seit lastEventId verpasst hat
+     * (Spezifikation 3.6). Nur unter dem Lock aufrufen: Solange er gehalten
+     * wird, kann keine neue Nachricht dazukommen. Jede Nachricht ist darum
+     * entweder schon im Puffer und wird hier geschickt, oder sie kommt nach
+     * der Anmeldung live — nie beides und nie keins.
+     *
+     * Die IDs sind zufällige UUIDs. Wir suchen deshalb die Position im
+     * Puffer und schicken alles, was danach kam, statt IDs zu vergleichen.
+     */
+    private void sendMissedMessages(UUID roomId, String lastEventId, SseEmitter client) {
+        boolean found = false;
+        for (LiveMessage message : buffer) {
+            if (found && message.roomId().equals(roomId)) {
+                send(client, message);
+            }
+            if (message.id().toString().equals(lastEventId)) {
+                found = true;
+            }
+        }
+
+        if (!found) {
+            sendGap(client, lastEventId);
+        }
+    }
+
+    /**
+     * Die ID ist nicht im Puffer: zu alt, oder diese Instanz lief damals
+     * noch nicht. Das Ereignis "gap" sagt dem Client, dass ihm Nachrichten
+     * fehlen könnten. Es hat bewusst keine id-Zeile (Spezifikation 2.2).
+     */
+    private void sendGap(SseEmitter client, String lastEventId) {
+        SseEmitter.SseEventBuilder gap = SseEmitter.event().name("gap").data(lastEventId);
+        sendEvent(client, gap);
+        log.info("Unknown Last-Event-ID {}, sent gap", lastEventId);
     }
 
     /**
@@ -72,7 +125,19 @@ public class LiveDelivery {
      */
     public void deliver(LiveMessage message) {
         synchronized (lock) {
+            remember(message);
             sendToRoom(message);
+        }
+    }
+
+    /**
+     * Legt die Nachricht in den Ringpuffer. Ist er voll, fällt die älteste
+     * hinaus. Nur unter dem Lock aufrufen.
+     */
+    private void remember(LiveMessage message) {
+        buffer.addLast(message);
+        if (buffer.size() > BUFFER_SIZE) {
+            buffer.removeFirst();
         }
     }
 

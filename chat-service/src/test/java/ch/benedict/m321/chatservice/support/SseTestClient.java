@@ -114,6 +114,17 @@ public final class SseTestClient implements AutoCloseable {
         }
     }
 
+    /** Wartet, bis eine bestimmte Zeile da ist, zum Beispiel "event:gap". */
+    public void waitForLine(String expectedLine, Duration timeout) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (!lines.contains(expectedLine)) {
+            if (System.currentTimeMillis() > deadline) {
+                throw new AssertionError("Line not received: " + expectedLine + ", got " + lines);
+            }
+            Thread.sleep(50);
+        }
+    }
+
     /** Trennt die Verbindung, so wie ein Client, der weggeht. */
     @Override
     public void close() throws IOException {
