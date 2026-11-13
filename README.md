@@ -35,7 +35,7 @@ des Gesamtsystems gehört später dem Gateway.
 
 | Baustein | Technologie | Aufgabe | Stand |
 |---|---|---|---|
-| chat-service | Spring Boot 3, Java 21 | Nimmt Nachrichten per `POST /messages` an, legt sie auf Queue und Fanout-Exchange | vorhanden |
+| chat-service | Spring Boot 3, Java 21 | Nimmt Nachrichten per `POST /messages` an, legt sie auf Queue und Fanout-Exchange. Jede Instanz liest ihre eigene Queue `chat.delivery.<UUID>` und liefert live per Server-Sent Events aus (`GET /stream?roomId=…`, Nachliefern mit `Last-Event-ID`) | vorhanden |
 | rabbitmq | RabbitMQ 3.13 | Message Queue zwischen den Services | vorhanden |
 | batch-writer | Spring Boot 3, Java 21 | Einziger Schreiber in die Datenbank: holt Nachrichten stapelweise aus `chat.persist` | vorhanden |
 | postgres | PostgreSQL 16 | Speichert den Chat-Verlauf in der Tabelle `message` | vorhanden |

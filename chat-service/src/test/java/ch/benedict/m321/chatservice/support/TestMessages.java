@@ -15,10 +15,12 @@ import java.util.UUID;
  */
 public final class TestMessages {
 
+    /** HTTP/1.1 wie bei curl in der Abnahme. */
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .build();
 
+    /** Nur zum Lesen einzelner Felder aus dem JSON am Stream-Client. */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /** Reine Sammlung von Hilfsmethoden, wird nie erzeugt. */

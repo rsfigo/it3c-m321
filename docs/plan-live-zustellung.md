@@ -219,3 +219,19 @@ Push.
 
 Änderungen nach dem Push kommen nur hier als neuer Eintrag dazu, mit Datum und Änderungsgrund.
 Die Schritte oben bleiben stehen, wie sie gepusht wurden.
+
+### Änderung 1 — 13.11.2026, beim Bauen von Schritt 3 und 4
+
+- **Kommentarzeile `:connected` beim Verbinden.** Änderungsgrund: Spring schickt die
+  Antwort-Header erst mit dem ersten Ereignis. Ohne erstes Ereignis sah der Client bis zur
+  ersten Nachricht nicht einmal den Content-Type, und `curl -D -` in S2 hätte nichts gezeigt.
+  Eine Zeile mit `:` ist laut SSE-Standard ein Kommentar, jeder Client überliest sie. Sie ist
+  kein Ereignis, Vertrag 2.2 bleibt also gültig.
+- **Einfacher Konverter für den DeliveryListener.** Änderungsgrund: Der JSON-Konverter wollte
+  die Nachricht vor dem Listener in eine ChatMessage umwandeln und lehnte die Klasse ab. Der
+  Listener braucht das JSON roh, damit `data:` genau dem Format in `chat.persist` entspricht.
+- **Kein eigener `LiveDeliveryTest` in Schritt 4.** Änderungsgrund: Nachliefern, kein Doppel,
+  Reihenfolge und `gap` prüft `ReconnectIntegrationTest` schon am echten Stream. Ein zweiter
+  Test derselben Regeln ohne Server hätte nichts Neues gezeigt.
+- **Schritt 6:** Beim Prüfen von S8 fand `grep "Stream\."` zwei Kommentare, in denen ein Satz
+  mit dem Wort «Stream» endet. Die Kommentare wurden umformuliert, der Code blieb gleich.

@@ -33,7 +33,7 @@ class StreamControllerIntegrationTest {
     @LocalServerPort
     private int port;
 
-    /** Ohne roomId weiss der Server nicht, was er schicken soll: 400, kein Stream. */
+    /** Ohne roomId weiss der Server nicht, was er schicken soll: 400, und es wird kein Stream geöffnet */
     @Test
     void rejectsMissingRoomId() throws Exception {
         int status = SseTestClient.statusOf(port, "/stream");
